@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Riju AI Chat</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%236c57ff'/><text y='.9em' font-size='70' x='15' fill='white' font-weight='800'>R</text></svg>">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    :root{
+      --bg:#080811;--surface:#0f0f1a;--card:#161622;--card2:#1c1c2e;
+      --border:rgba(108,87,255,0.18);--border2:rgba(108,87,255,0.32);
+      --accent:#6c57ff;--accent2:#00e5b0;--accent3:#ff5c8a;
+      --gold:#f5c542;--text:#ece9ff;--muted:#7a7899;--glow:rgba(108,87,255,0.25);
+    }
+    html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;overflow:hidden;}
+    .page{display:none;width:100vw;height:100vh;position:fixed;inset:0;}
+    .page.active{display:flex;}
+    .orbs{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;}
+    .orb{position:absolute;border-radius:50%;filter:blur(80px);opacity:0.35;animation:orbFloat 12s ease-in-out infinite;}
+    .orb1{width:500px;height:500px;top:-150px;left:-150px;background:radial-gradient(circle,#6c57ff,transparent);}
+    .orb2{width:400px;height:400px;bottom:-100px;right:-100px;background:radial-gradient(circle,#00e5b0,transparent);animation-delay:-4s;}
+    .orb3{width:300px;height:300px;top:50%;left:40%;background:radial-gradient(circle,#ff5c8a,transparent);opacity:0.15;animation-delay:-8s;}
+    @keyframes orbFloat{0%,100%{transform:translate(0,0) scale(1);}33%{transform:translate(30px,-20px) scale(1.05);}66%{transform:translate(-20px,15px) scale(0.95);}}
+    /* LOGIN */
+    #loginPage{align-items:center;justify-content:center;}
+    .login-wrap{position:relative;z-index:1;background:var(--card);border:1px solid var(--border2);border-radius:28px;padding:48px 40px;width:420px;max-width:95vw;text-align:center;animation:fadeUp 0.7s cubic-bezier(0.16,1,0.3,1);box-shadow:0 0 80px rgba(108,87,255,0.1),inset 0 1px 0 rgba(255,255,255,0.04);}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(28px);}to{opacity:1;transform:translateY(0);}}
+    .logo-ring{width:80px;height:80px;margin:0 auto 22px;border-radius:22px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:34px;font-weight:800;color:#fff;box-shadow:0 12px 40px var(--glow);animation:logoBob 4s ease-in-out infinite;}
+    @keyframes logoBob{0%,100%{transform:translateY(0);}50%{transform:translateY(-7px);}}
+    .login-h{font-family:'Syne',sans-serif;font-size:30px;font-weight:800;background:linear-gradient(135deg,#fff 30%,var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:6px;}
+    .login-sub{color:var(--muted);font-size:14px;margin-bottom:28px;line-height:1.6;}
+    .inp-grp{margin-bottom:14px;text-align:left;}
+    .inp-lbl{font-size:12px;color:var(--muted);margin-bottom:6px;display:block;text-transform:uppercase;letter-spacing:0.06em;}
+    .txt-inp{width:100%;padding:13px 16px;border-radius:12px;background:var(--card2);border:1px solid var(--border);color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;outline:none;transition:border-color 0.2s;}
+    .txt-inp:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(108,87,255,0.1);}
+    .txt-inp::placeholder{color:var(--muted);}
+    .login-btn{width:100%;padding:14px 20px;border-radius:14px;background:linear-gradient(135deg,var(--accent),#8b5cf6);border:none;cursor:pointer;color:#fff;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;transition:all 0.25s;box-shadow:0 4px 20px var(--glow);display:flex;align-items:center;justify-content:center;gap:8px;}
+    .login-btn:hover{transform:translateY(-2px);box-shadow:0 8px 28px var(--glow);}
+    .div-row{margin:20px 0;display:flex;align-items:center;gap:12px;}
+    .div-line{flex:1;height:1px;background:var(--border);}
+    .div-txt{font-size:12px;color:var(--muted);}
+    .demo-row{display:flex;gap:10px;}
+    .demo-btn{flex:1;padding:11px 10px;border-radius:11px;background:transparent;border:1px solid var(--border);color:var(--muted);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:6px;}
+    .demo-btn:hover{background:rgba(108,87,255,0.08);border-color:var(--accent);color:var(--text);}
+    .err-msg{color:#ff5c8a;font-size:13px;margin-top:10px;display:none;}
+    /* CHAT */
+    #chatPage{flex-direction:row;}
+    .sidebar{width:264px;min-width:264px;height:100vh;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;position:relative;z-index:2;animation:sideIn 0.5s cubic-bezier(0.16,1,0.3,1);}
+    @keyframes sideIn{from{transform:translateX(-16px);opacity:0;}to{transform:translateX(0);opacity:1;}}
+    .sb-head{padding:18px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+    .sb-logo{width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:16px;color:#fff;flex-shrink:0;}
+    .sb-brand{font-family:'Syne',sans-serif;font-weight:700;font-size:15px;}
+    .sb-brand em{color:var(--accent2);font-style:normal;}
+    .new-btn{margin:12px;padding:10px 14px;border-radius:11px;background:linear-gradient(135deg,var(--accent),#8b5cf6);border:none;color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:8px;transition:all 0.2s;box-shadow:0 4px 16px var(--glow);}
+    .new-btn:hover{transform:translateY(-1px);}
+    .sb-hist{flex:1;overflow-y:auto;padding:4px 8px;}
+    .sb-hist::-webkit-scrollbar{width:3px;}.sb-hist::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+    .sb-lbl{font-size:10px;color:var(--muted);padding:6px 8px;text-transform:uppercase;letter-spacing:0.08em;}
+    .sb-item{padding:8px 10px;border-radius:9px;cursor:pointer;font-size:13px;color:var(--muted);transition:all 0.18s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:8px;}
+    .sb-item:hover,.sb-item.active{background:rgba(108,87,255,0.1);color:var(--text);}
+    .sb-item.active{border-left:2px solid var(--accent);}
+    .sb-foot{padding:12px;border-top:1px solid var(--border);}
+    .user-row{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;}
+    .u-av{width:34px;height:34px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:#fff;}
+    .u-name{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px;}
+    .u-email{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px;}
+    .chat-main{flex:1;display:flex;flex-direction:column;height:100vh;overflow:hidden;position:relative;z-index:1;}
+    .chat-nav{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:rgba(15,15,26,0.85);backdrop-filter:blur(12px);flex-shrink:0;}
+    .chat-nav-left{display:flex;align-items:center;gap:10px;}
+    .chat-ttl{font-family:'Syne',sans-serif;font-weight:700;font-size:15px;}
+    .live-dot{padding:4px 10px;border-radius:20px;font-size:11px;font-weight:500;background:rgba(0,229,176,0.1);color:var(--accent2);border:1px solid rgba(0,229,176,0.2);display:flex;align-items:center;gap:5px;}
+    .live-dot::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--accent2);animation:lp 2s infinite;}
+    @keyframes lp{0%,100%{opacity:1;}50%{opacity:0.3;}}
+    .nav-btns{display:flex;gap:8px;}
+    .nav-btn{padding:6px 14px;border-radius:9px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:12px;cursor:pointer;transition:all 0.18s;font-family:'DM Sans',sans-serif;}
+    .nav-btn:hover{color:var(--text);border-color:var(--accent);}
+    .nav-btn.adm{color:var(--accent3);border-color:rgba(255,92,138,0.25);}
+    .nav-btn.adm:hover{background:rgba(255,92,138,0.08);}
+    .msgs{flex:1;overflow-y:auto;padding:24px 20px;display:flex;flex-direction:column;gap:16px;scroll-behavior:smooth;}
+    .msgs::-webkit-scrollbar{width:4px;}.msgs::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+    .welcome{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;text-align:center;}
+    .w-icon{width:88px;height:88px;border-radius:26px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:36px;font-weight:800;color:#fff;margin:0 auto 22px;box-shadow:0 16px 56px var(--glow);animation:iconFloat 4s ease-in-out infinite;}
+    @keyframes iconFloat{0%,100%{transform:translateY(0);}50%{transform:translateY(-10px);}}
+    .w-h{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;margin-bottom:8px;background:linear-gradient(135deg,#fff,var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+    .w-p{color:var(--muted);font-size:15px;margin-bottom:36px;max-width:420px;line-height:1.6;}
+    .sg-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;max-width:500px;width:100%;}
+    .sg-card{padding:16px;border-radius:14px;background:var(--card);border:1px solid var(--border);cursor:pointer;text-align:left;transition:all 0.22s;}
+    .sg-card:hover{border-color:var(--accent);background:rgba(108,87,255,0.07);transform:translateY(-3px);box-shadow:0 8px 24px var(--glow);}
+    .sg-icon{font-size:22px;margin-bottom:8px;display:block;}
+    .sg-ttl{font-size:13px;font-weight:500;color:var(--text);}
+    .sg-dsc{font-size:12px;color:var(--muted);margin-top:3px;}
+    .msg{display:flex;gap:12px;max-width:78%;animation:msgPop 0.35s cubic-bezier(0.16,1,0.3,1);}
+    @keyframes msgPop{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+    .msg.user{margin-left:auto;flex-direction:row-reverse;}
+    .msg-av{width:34px;height:34px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:#fff;}
+    .msg.ai .msg-av{background:linear-gradient(135deg,var(--accent),var(--accent2));}
+    .bubble{padding:13px 16px;border-radius:18px;font-size:14px;line-height:1.65;}
+    .msg.ai .bubble{background:var(--card2);border:1px solid var(--border);border-top-left-radius:4px;color:var(--text);}
+    .msg.user .bubble{background:linear-gradient(135deg,var(--accent),#8b5cf6);border-top-right-radius:4px;color:#fff;}
+    .typing-wrap{display:flex;gap:12px;align-items:flex-end;}
+    .typing-bbl{padding:14px 18px;background:var(--card2);border:1px solid var(--border);border-radius:18px;border-top-left-radius:4px;display:flex;gap:5px;align-items:center;}
+    .tdot{width:7px;height:7px;border-radius:50%;background:var(--accent);animation:tdot 1.4s ease-in-out infinite;}
+    .tdot:nth-child(2){animation-delay:0.2s;background:var(--accent2);}
+    .tdot:nth-child(3){animation-delay:0.4s;background:var(--accent3);}
+    @keyframes tdot{0%,60%,100%{transform:translateY(0);opacity:0.35;}30%{transform:translateY(-7px);opacity:1;}}
+    .inp-zone{padding:16px 20px;border-top:1px solid var(--border);background:rgba(15,15,26,0.9);backdrop-filter:blur(12px);flex-shrink:0;}
+    .inp-inner{display:flex;align-items:flex-end;gap:10px;background:var(--card2);border:1px solid var(--border);border-radius:18px;padding:10px 12px;transition:all 0.2s;}
+    .inp-inner:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px rgba(108,87,255,0.1);}
+    #chatInput{flex:1;background:transparent;border:none;outline:none;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;resize:none;max-height:130px;min-height:24px;line-height:1.5;}
+    #chatInput::placeholder{color:var(--muted);}
+    .send-btn{width:38px;height:38px;border-radius:11px;flex-shrink:0;background:linear-gradient(135deg,var(--accent),#8b5cf6);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;color:#fff;font-size:16px;}
+    .send-btn:hover{transform:scale(1.1);box-shadow:0 4px 16px var(--glow);}
+    .send-btn:disabled{opacity:0.5;cursor:not-allowed;transform:none;}
+    .inp-hint{font-size:11px;color:var(--muted);margin-top:8px;text-align:center;}
+    /* ADMIN */
+    #adminPage{flex-direction:column;}
+    .adm-nav{padding:14px 24px;border-bottom:1px solid var(--border);background:var(--surface);display:flex;align-items:center;justify-content:space-between;position:relative;z-index:2;flex-shrink:0;}
+    .adm-brand{font-family:'Syne',sans-serif;font-weight:800;font-size:18px;}
+    .adm-brand em{color:var(--accent3);font-style:normal;}
+    .adm-pill{padding:4px 14px;border-radius:20px;font-size:12px;font-weight:500;background:rgba(255,92,138,0.1);color:var(--accent3);border:1px solid rgba(255,92,138,0.2);}
+    .adm-body{flex:1;overflow-y:auto;padding:24px;position:relative;z-index:1;}
+    .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px;}
+    .s-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;animation:fadeUp 0.5s cubic-bezier(0.16,1,0.3,1) backwards;}
+    .s-card:nth-child(1){animation-delay:0.05s;}.s-card:nth-child(2){animation-delay:0.1s;}.s-card:nth-child(3){animation-delay:0.15s;}.s-card:nth-child(4){animation-delay:0.2s;}
+    .s-lbl{font-size:11px;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.06em;}
+    .s-num{font-family:'Syne',sans-serif;font-size:30px;font-weight:800;}
+    .s-sub{font-size:12px;color:var(--accent2);margin-top:5px;}
+    .sec-ttl{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+    .sec-dot{width:8px;height:8px;border-radius:50%;background:var(--accent3);animation:lp 2s infinite;}
+    .u-tbl{background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden;}
+    .tbl-h{display:grid;grid-template-columns:2fr 2.5fr 0.8fr 1fr 1fr;padding:12px 16px;background:rgba(108,87,255,0.04);border-bottom:1px solid var(--border);font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.07em;}
+    .tbl-r{display:grid;grid-template-columns:2fr 2.5fr 0.8fr 1fr 1fr;padding:14px 16px;border-bottom:1px solid rgba(108,87,255,0.06);align-items:center;font-size:13px;transition:background 0.18s;}
+    .tbl-r:last-child{border-bottom:none;}.tbl-r:hover{background:rgba(108,87,255,0.04);}
+    .row-u{display:flex;align-items:center;gap:10px;}
+    .r-av{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:#fff;flex-shrink:0;}
+    .r-name{font-weight:500;}.r-email{color:var(--muted);font-size:12px;}
+    .sbdg{padding:3px 9px;border-radius:12px;font-size:11px;font-weight:500;}
+    .sbdg.on{background:rgba(0,229,176,0.1);color:var(--accent2);}
+    .view-btn{padding:5px 12px;border-radius:9px;background:rgba(108,87,255,0.1);border:1px solid rgba(108,87,255,0.2);color:var(--accent);font-size:12px;cursor:pointer;transition:all 0.18s;font-family:'DM Sans',sans-serif;}
+    .view-btn:hover{background:rgba(108,87,255,0.2);}
+    .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:200;align-items:center;justify-content:center;backdrop-filter:blur(6px);}
+    .overlay.open{display:flex;}
+    .modal{background:var(--card);border:1px solid var(--border2);border-radius:22px;width:600px;max-width:96vw;max-height:82vh;display:flex;flex-direction:column;animation:fadeUp 0.3s cubic-bezier(0.16,1,0.3,1);}
+    .modal-head{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+    .modal-ttl{font-family:'Syne',sans-serif;font-weight:700;font-size:16px;}
+    .modal-sub{font-size:12px;color:var(--muted);margin-top:3px;}
+    .modal-x{width:34px;height:34px;border-radius:9px;background:rgba(122,120,153,0.1);border:none;color:var(--muted);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:all 0.18s;}
+    .modal-x:hover{background:rgba(255,92,138,0.1);color:var(--accent3);}
+    .modal-msgs{flex:1;overflow-y:auto;padding:20px 24px;display:flex;flex-direction:column;gap:14px;}
+    .modal-msgs::-webkit-scrollbar{width:4px;}.modal-msgs::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+    .btn-back{padding:8px 16px;border-radius:10px;background:transparent;border:1px solid var(--border);color:var(--muted);font-size:13px;cursor:pointer;transition:all 0.18s;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:6px;}
+    .btn-back:hover{color:var(--text);border-color:var(--accent);}
+    @media(max-width:700px){.sidebar{display:none;}.stats-row{grid-template-columns:1fr 1fr;}.sg-grid{grid-template-columns:1fr;}}
+  </style>
+</head>
+<body>
+  <div class="orbs">
+    <div class="orb orb1"></div>
+    <div class="orb orb2"></div>
+    <div class="orb orb3"></div>
+  </div>
+
+  <!-- LOGIN -->
+  <div id="loginPage" class="page active">
+    <div class="login-wrap">
+      <div class="logo-ring">R</div>
+      <div class="login-h">Riju AI Chat</div>
+      <div class="login-sub">বাংলাদেশের নিজস্ব AI সহকারী<br>নাম ও Gmail দিয়ে এখনই শুরু করো</div>
+      <div class="inp-grp">
+        <label class="inp-lbl">তোমার নাম</label>
+        <input class="txt-inp" id="loginName" type="text" placeholder="যেমন: Riju Bala" />
+      </div>
+      <div class="inp-grp">
+        <label class="inp-lbl">Gmail অ্যাড্রেস</label>
+        <input class="txt-inp" id="loginEmail" type="email" placeholder="example@gmail.com" />
+      </div>
+      <button class="login-btn" onclick="doLogin()">✦ Riju AI-তে প্রবেশ করুন</button>
+      <div class="err-msg" id="errMsg">নাম ও সঠিক Gmail দাও!</div>
+      <div class="div-row"><div class="div-line"></div><span class="div-txt">অথবা Demo দেখো</span><div class="div-line"></div></div>
+      <div class="demo-row">
+        <button class="demo-btn" onclick="demoLogin('user')">👤 User Demo</button>
+        <button class="demo-btn" onclick="demoLogin('admin')">⚡ Admin Demo</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHAT -->
+  <div id="chatPage" class="page">
+    <div class="sidebar">
+      <div class="sb-head">
+        <div class="sb-logo">R</div>
+        <div><div class="sb-brand">Riju <em>AI</em></div></div>
+      </div>
+      <button class="new-btn" onclick="newChat()">✦ নতুন Chat</button>
+      <div class="sb-hist">
+        <div class="sb-lbl">আজকে</div>
+        <div class="sb-item active" id="curChat">💬 নতুন কথোপকথন</div>
+      </div>
+      <div class="sb-foot">
+        <div class="user-row">
+          <div class="u-av" id="sbAv" style="background:linear-gradient(135deg,#6c57ff,#ff5c8a)">U</div>
+          <div style="overflow:hidden">
+            <div class="u-name" id="sbName">—</div>
+            <div class="u-email" id="sbEmail">—</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="chat-main">
+      <div class="chat-nav">
+        <div class="chat-nav-left">
+          <div class="chat-ttl">Riju AI Chat</div>
+          <div class="live-dot">Live</div>
+        </div>
+        <div class="nav-btns">
+          <button class="nav-btn adm" id="adminBtn" style="display:none" onclick="gotoAdmin()">⚡ Admin</button>
+          <button class="nav-btn" onclick="doLogout()">← Logout</button>
+        </div>
+      </div>
+      <div id="welcomeScreen" class="welcome">
+        <div class="w-icon">R</div>
+        <div class="w-h" id="wGreet">স্বাগতম!</div>
+        <div class="w-p">আমি Riju AI। যেকোনো প্রশ্ন করো — বাংলায় বা ইংরেজিতে।</div>
+        <div class="sg-grid">
+          <div class="sg-card" onclick="useSug('একটি Python function লিখে দাও যেটা দুটো সংখ্যা যোগ করে')"><span class="sg-icon">💻</span><div class="sg-ttl">কোড লেখা</div><div class="sg-dsc">Python, JS, C++ এবং আরো</div></div>
+          <div class="sg-card" onclick="useSug('বাংলাদেশের মুক্তিযুদ্ধ সম্পর্কে বিস্তারিত বলো')"><span class="sg-icon">📚</span><div class="sg-ttl">পড়াশোনা</div><div class="sg-dsc">যেকোনো বিষয় সহজে বুঝি</div></div>
+          <div class="sg-card" onclick="useSug('একটি online business শুরু করার পরিকল্পনা দাও')"><span class="sg-icon">💡</span><div class="sg-ttl">ব্যবসার আইডিয়া</div><div class="sg-dsc">পরিকল্পনা ও পরামর্শ</div></div>
+          <div class="sg-card" onclick="useSug('বসন্তের উপর একটি সুন্দর বাংলা কবিতা লিখে দাও')"><span class="sg-icon">✍️</span><div class="sg-ttl">সৃজনশীল লেখা</div><div class="sg-dsc">গল্প, কবিতা, প্রবন্ধ</div></div>
+        </div>
+      </div>
+      <div id="msgsArea" class="msgs" style="display:none"></div>
+      <div class="inp-zone">
+        <div class="inp-inner">
+          <textarea id="chatInput" placeholder="Riju AI-কে কিছু জিজ্ঞেস করুন..." rows="1" onkeydown="handleKey(event)" oninput="autoGrow(this)"></textarea>
+          <button class="send-btn" id="sendBtn" onclick="sendMsg()">↑</button>
+        </div>
+        <div class="inp-hint">Enter = পাঠাও · Shift+Enter = নতুন লাইন</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADMIN -->
+  <div id="adminPage" class="page">
+    <div class="adm-nav">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="adm-brand">Riju AI <em>Admin</em></div>
+        <div class="adm-pill">Admin Panel</div>
+      </div>
+      <div style="display:flex;gap:10px">
+        <button class="btn-back" onclick="showPage('chatPage')">← Chat এ ফিরুন</button>
+        <button class="btn-back" style="color:var(--accent3);border-color:rgba(255,92,138,0.25)" onclick="doLogout()">Logout</button>
+      </div>
+    </div>
+    <div class="adm-body">
+      <div class="stats-row">
+        <div class="s-card"><div class="s-lbl">মোট ব্যবহারকারী</div><div class="s-num" style="color:var(--accent)" id="stU">0</div><div class="s-sub">↑ নিবন্ধিত</div></div>
+        <div class="s-card"><div class="s-lbl">মোট Messages</div><div class="s-num" style="color:var(--accent2)" id="stM">0</div><div class="s-sub">সব সময়ের</div></div>
+        <div class="s-card"><div class="s-lbl">মোট Chats</div><div class="s-num" style="color:var(--accent3)" id="stC">0</div><div class="s-sub">● এই সেশনে</div></div>
+        <div class="s-card"><div class="s-lbl">Response Rate</div><div class="s-num" style="color:var(--gold)">99%</div><div class="s-sub">✓ Uptime</div></div>
+      </div>
+      <div class="sec-ttl"><div class="sec-dot"></div>সকল ব্যবহারকারীর Chat দেখুন</div>
+      <div class="u-tbl">
+        <div class="tbl-h"><span>নাম</span><span>Gmail</span><span>Msg</span><span>Status</span><span>দেখুন</span></div>
+        <div id="usersBody"><div style="padding:32px;text-align:center;color:var(--muted)">এখনো কেউ chat করেনি।</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div class="overlay" id="overlay">
+    <div class="modal">
+      <div class="modal-head">
+        <div><div class="modal-ttl" id="mTitle">Chat ইতিহাস</div><div class="modal-sub" id="mSub"></div></div>
+        <button class="modal-x" onclick="closeModal()">✕</button>
+      </div>
+      <div class="modal-msgs" id="mMsgs"></div>
+    </div>
+  </div>
+
+  <script>
+    // ✅ এখানে কোনো API Key নেই — সম্পূর্ণ secure!
+    // Admin Gmail টা শুধু বদলাও:
+    const ADMIN_EMAIL = "rijubala73@gmail.com"; // ← শুধু এইটুকু বদলাও
+
+    let cu=null,hist=[],sending=false,started=false;
+    const DB={};
+    const CLR=['#6c57ff','#00e5b0','#ff5c8a','#f5c542','#5bc0f8','#a78bfa'];
+
+    function showPage(id){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById(id).classList.add('active');}
+    function gotoAdmin(){showPage('adminPage');renderAdmin();}
+
+    function doLogin(){
+      const n=document.getElementById('loginName').value.trim();
+      const e=document.getElementById('loginEmail').value.trim().toLowerCase();
+      const err=document.getElementById('errMsg');
+      if(!n||!e||!e.includes('@')){err.style.display='block';return;}
+      err.style.display='none';
+      loginAs(n,e);
+    }
+    function demoLogin(t){
+      if(t==='admin')loginAs('Admin Riju',ADMIN_EMAIL);
+      else loginAs('Demo User','demo@gmail.com');
+    }
+    function loginAs(name,email){
+      if(!DB[email])DB[email]={name,email,msgs:[],time:new Date().toISOString()};
+      const idx=Object.keys(DB).indexOf(email);
+      cu={name,email,ini:name[0].toUpperCase(),clr:CLR[idx%CLR.length]};
+      document.getElementById('sbName').textContent=name;
+      document.getElementById('sbEmail').textContent=email;
+      const av=document.getElementById('sbAv');
+      av.textContent=cu.ini;av.style.background=`linear-gradient(135deg,${cu.clr},#ff5c8a)`;
+      const h=new Date().getHours();
+      document.getElementById('wGreet').textContent=(h<12?'শুভ সকাল':h<17?'শুভ অপরাহ্ন':'শুভ সন্ধ্যা')+', '+name.split(' ')[0]+'!';
+      if(email===ADMIN_EMAIL)document.getElementById('adminBtn').style.display='block';
+      showPage('chatPage');
+    }
+    function doLogout(){
+      cu=null;hist=[];sending=false;started=false;
+      document.getElementById('msgsArea').innerHTML='';
+      document.getElementById('msgsArea').style.display='none';
+      document.getElementById('welcomeScreen').style.display='flex';
+      document.getElementById('adminBtn').style.display='none';
+      document.getElementById('loginName').value='';
+      document.getElementById('loginEmail').value='';
+      showPage('loginPage');
+    }
+    function newChat(){
+      hist=[];started=false;
+      document.getElementById('msgsArea').innerHTML='';
+      document.getElementById('msgsArea').style.display='none';
+      document.getElementById('welcomeScreen').style.display='flex';
+      document.getElementById('curChat').textContent='💬 নতুন কথোপকথন';
+    }
+    function useSug(t){document.getElementById('chatInput').value=t;sendMsg();}
+    function handleKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMsg();}}
+    function autoGrow(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,130)+'px';}
+
+    function addBubble(role,text){
+      const a=document.getElementById('msgsArea');
+      if(!started){document.getElementById('welcomeScreen').style.display='none';a.style.display='flex';started=true;}
+      const d=document.createElement('div');d.className='msg '+role;
+      const av=role==='user'
+        ?`<div class="msg-av" style="background:linear-gradient(135deg,${cu?.clr||'#6c57ff'},#ff5c8a)">${cu?.ini||'U'}</div>`
+        :`<div class="msg-av">R</div>`;
+      const fmt=text.replace(/\n/g,'<br>').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/`([^`]+)`/g,'<code style="background:rgba(108,87,255,0.15);padding:2px 6px;border-radius:4px;font-family:monospace;font-size:13px">$1</code>');
+      d.innerHTML=`${av}<div class="bubble">${fmt}</div>`;
+      a.appendChild(d);a.scrollTop=a.scrollHeight;
+    }
+    function showTyping(){
+      const a=document.getElementById('msgsArea');
+      if(!started){document.getElementById('welcomeScreen').style.display='none';a.style.display='flex';started=true;}
+      const d=document.createElement('div');d.className='typing-wrap';d.id='tEl';
+      d.innerHTML=`<div class="msg-av" style="background:linear-gradient(135deg,var(--accent),var(--accent2))">R</div><div class="typing-bbl"><div class="tdot"></div><div class="tdot"></div><div class="tdot"></div></div>`;
+      a.appendChild(d);a.scrollTop=a.scrollHeight;
+    }
+    function hideTyping(){const t=document.getElementById('tEl');if(t)t.remove();}
+
+    async function sendMsg(){
+      if(sending)return;
+      const inp=document.getElementById('chatInput');
+      const text=inp.value.trim();if(!text)return;
+      inp.value='';inp.style.height='auto';
+      sending=true;document.getElementById('sendBtn').disabled=true;
+      addBubble('user',text);
+      document.getElementById('curChat').textContent='💬 '+text.slice(0,28)+(text.length>28?'…':'');
+      showTyping();
+
+      try{
+        // ✅ API Key নেই — Netlify Function এ পাঠাচ্ছে
+        const res=await fetch('/api/chat',{
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({message:text,history:hist})
+        });
+        hideTyping();
+        if(!res.ok){
+          const ed=await res.json().catch(()=>({}));
+          addBubble('ai','❌ সার্ভার সমস্যা: '+(ed?.error||res.status)+'. Netlify deploy ঠিক আছে কিনা দেখো।');
+        }else{
+          const data=await res.json();
+          const reply=data.reply||'উত্তর পাওয়া যায়নি।';
+          addBubble('ai',reply);
+          hist.push({role:'user',text},{role:'ai',text:reply});
+          if(hist.length>24)hist=hist.slice(-24);
+          if(cu){
+            if(!DB[cu.email])DB[cu.email]={name:cu.name,email:cu.email,msgs:[],time:new Date().toISOString()};
+            DB[cu.email].msgs.push(
+              {role:'user',text,t:new Date().toLocaleTimeString('bn-BD')},
+              {role:'ai',text:reply,t:new Date().toLocaleTimeString('bn-BD')}
+            );
+          }
+        }
+      }catch(err){
+        hideTyping();
+        addBubble('ai','❌ সংযোগ সমস্যা। Internet অথবা Netlify deploy চেক করো।');
+      }
+      sending=false;document.getElementById('sendBtn').disabled=false;
+    }
+
+    function renderAdmin(){
+      const users=Object.values(DB);
+      document.getElementById('stU').textContent=users.length;
+      document.getElementById('stM').textContent=users.reduce((s,u)=>s+u.msgs.length,0);
+      document.getElementById('stC').textContent=users.reduce((s,u)=>s+Math.floor(u.msgs.length/2),0);
+      const body=document.getElementById('usersBody');
+      if(!users.length){body.innerHTML='<div style="padding:32px;text-align:center;color:var(--muted)">এখনো কেউ chat করেনি।</div>';return;}
+      body.innerHTML='';
+      users.forEach((u,i)=>{
+        const c=CLR[i%CLR.length];
+        const d=document.createElement('div');d.className='tbl-r';
+        d.innerHTML=`<div class="row-u"><div class="r-av" style="background:${c}">${u.name[0]}</div><div class="r-name">${u.name}</div></div><div class="r-email">${u.email}</div><div>${u.msgs.length}</div><div><span class="sbdg on">● Active</span></div><div><button class="view-btn" onclick="viewChat('${u.email}')">দেখুন →</button></div>`;
+        body.appendChild(d);
+      });
+    }
+    function viewChat(email){
+      const u=DB[email];if(!u)return;
+      document.getElementById('mTitle').textContent=u.name+'-এর Chat';
+      document.getElementById('mSub').textContent=u.email;
+      const area=document.getElementById('mMsgs');area.innerHTML='';
+      if(!u.msgs.length){area.innerHTML='<div style="text-align:center;color:var(--muted);padding:24px">কোনো message নেই।</div>';}
+      else{
+        u.msgs.forEach(m=>{
+          const d=document.createElement('div');d.className='msg '+(m.role==='ai'?'ai':'user');
+          const av=m.role==='ai'?`<div class="msg-av">R</div>`:`<div class="msg-av" style="background:linear-gradient(135deg,#6c57ff,#ff5c8a)">${u.name[0]}</div>`;
+          d.innerHTML=`${av}<div class="bubble">${m.text.replace(/\n/g,'<br>')}<div style="font-size:10px;opacity:0.4;margin-top:4px">${m.t||''}</div></div>`;
+          area.appendChild(d);
+        });
+      }
+      document.getElementById('overlay').classList.add('open');
+    }
+    function closeModal(){document.getElementById('overlay').classList.remove('open');}
+    document.getElementById('loginEmail').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+    document.getElementById('loginName').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('loginEmail').focus();});
+  </script>
+</body>
+</html>
